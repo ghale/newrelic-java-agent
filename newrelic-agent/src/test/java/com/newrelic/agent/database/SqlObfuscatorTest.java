@@ -29,18 +29,16 @@ import static org.junit.Assert.assertSame;
 public class SqlObfuscatorTest {
 
     @Test
-    public void obfuscateHTML() {
-        String parameter="";
-        String path = "src/test/resources/com/newrelic/agent/document-content.json";
+    public void obfuscateEdgeCase() {
+        String sql="";
+        String path = "src/test/resources/com/newrelic/agent/edge-case.sql";
         try (Stream<String> lines = java.nio.file.Files.lines(Paths.get(path), StandardCharsets.UTF_8)) {
-            parameter = lines.collect(Collectors.joining(System.lineSeparator()));
+            sql = lines.collect(Collectors.joining(System.lineSeparator()));
 
         } catch (IOException e) {
             e.printStackTrace();
         }
-        parameter = "'" + parameter + "'";
-        String sql = "insert employees values (4, "+parameter+"  )";
-        assertEquals("insert employees values (?, ?)", SqlObfuscator.getDefaultSqlObfuscator().obfuscateSql(sql));
+        assertEquals("update content set content=? where id=?", SqlObfuscator.getDefaultSqlObfuscator().obfuscateSql(sql, "mysql"));
     }
 
     @Test

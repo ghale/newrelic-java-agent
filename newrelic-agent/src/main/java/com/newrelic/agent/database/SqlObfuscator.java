@@ -8,10 +8,12 @@
 package com.newrelic.agent.database;
 
 import com.google.common.base.Joiner;
+import com.newrelic.agent.Agent;
 import jregex.Pattern;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
 
 /**
  * The agent can be configured to report raw sql in transaction traces, report no sql at all, or report sql with string
@@ -107,9 +109,14 @@ public abstract class SqlObfuscator {
             if (sql == null || sql.length() == 0) {
                 return sql;
             }
+            Agent.LOG.log(Level.INFO, "***SQL***[" + sql + "]");
+            Agent.LOG.log(Level.INFO, "dialect=" + dialect);
             if (dialect.equals("mysql")) {
                 String obfuscatedSql = MYSQL_DIALECT_PATTERN.replacer("?").replace(sql);
-                return checkForUnmatchedPairs(MYSQL_UNMATCHED_PATTERN, obfuscatedSql);
+                Agent.LOG.log(Level.INFO, "***OBSQL***[" + obfuscatedSql + "]");
+                obfuscatedSql = checkForUnmatchedPairs(MYSQL_UNMATCHED_PATTERN, obfuscatedSql);
+                Agent.LOG.log(Level.INFO, "***OB2SQL***[" + obfuscatedSql + "]");
+                return obfuscatedSql;
             } else if (dialect.equals("postgresql") || dialect.equals("postgres")) {
                 String obfuscatedSql = POSTGRES_DIALECT_PATTERN.replacer("?").replace(sql);
                 return checkForUnmatchedPairs(POSTGRES_UNMATCHED_PATTERN, obfuscatedSql);
