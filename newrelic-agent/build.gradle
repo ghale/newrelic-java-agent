@@ -107,6 +107,16 @@ dependencies {
     testImplementation("org.eclipse.jetty:jetty-server:8.1.14.v20131031")
     testImplementation("org.eclipse.jetty:jetty-servlet:8.1.14.v20131031")
     testImplementation(project(path: ':newrelic-weaver', configuration: 'testClasses'))
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.2'
+    testImplementation 'org.junit.jupiter:junit-jupiter-params:5.7.2'
+
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.2'
+    testRuntimeOnly 'org.junit.vintage:junit-vintage-engine:5.7.2'
+
+}
+
+test {
+    useJUnitPlatform()
 }
 
 /**

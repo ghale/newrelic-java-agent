@@ -10,24 +10,36 @@ package com.newrelic.agent.database;
 import com.google.common.base.Charsets;
 import com.google.common.io.CharSource;
 import com.google.common.io.Files;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvFileSource;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
-import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertSame;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
 public class SqlObfuscatorTest {
 
+    @ParameterizedTest
+    @CsvFileSource(resources = "/sql.csv", delimiter = '|', numLinesToSkip = 2)
+    public void testObfuscation(String dialect, String sql, String expectedResult) {
+        String result = dialect.isEmpty() ?
+                SqlObfuscator.getDefaultSqlObfuscator().obfuscateSql(sql) :
+                SqlObfuscator.getDefaultSqlObfuscator().obfuscateSql(sql, dialect);
+        Assertions.assertEquals(expectedResult, result);
+    }
+
+    @Disabled
     @Test
     public void obfuscateEdgeCase() {
         String sql="";
@@ -38,64 +50,64 @@ public class SqlObfuscatorTest {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        assertEquals("As a last resort, SQL should be obfuscated to a '?' to avoid leaky PII", "?",
-                SqlObfuscator.getDefaultSqlObfuscator().obfuscateSql(sql));
+        Assertions.assertEquals("?",
+                SqlObfuscator.getDefaultSqlObfuscator().obfuscateSql(sql, "mysql"), "As a last resort, SQL should be obfuscated to a '?' to avoid leaky PII");
     }
 
     @Test
     public void nullSql() {
-        assertEquals(null, SqlObfuscator.getDefaultSqlObfuscator().obfuscateSql(null));
+        Assertions.assertEquals(null, SqlObfuscator.getDefaultSqlObfuscator().obfuscateSql(null));
     }
 
     @Test
     public void columnsWithNumerics() {
         String sql = "Select id0 from metrics0";
-        assertEquals(sql, SqlObfuscator.getDefaultSqlObfuscator().obfuscateSql(sql));
+        Assertions.assertEquals(sql, SqlObfuscator.getDefaultSqlObfuscator().obfuscateSql(sql));
     }
 
     @Test
     public void quotedColumns() {
         String sql = "select \"id\", 'name' from employees";
-        assertEquals("select ?, ? from employees", SqlObfuscator.getDefaultSqlObfuscator().obfuscateSql(sql));
+        Assertions.assertEquals("select ?, ? from employees", SqlObfuscator.getDefaultSqlObfuscator().obfuscateSql(sql));
     }
 
     @Test
     public void insert() {
         String sql = "insert employees values (4, 'dude')";
-        assertEquals("insert employees values (?, ?)", SqlObfuscator.getDefaultSqlObfuscator().obfuscateSql(sql));
+        Assertions.assertEquals("insert employees values (?, ?)", SqlObfuscator.getDefaultSqlObfuscator().obfuscateSql(sql));
     }
 
     @Test
     public void like() {
         String sql = "select * from employees where name like 'dude'";
-        assertEquals("select * from employees where name like ?", SqlObfuscator.getDefaultSqlObfuscator().obfuscateSql(sql));
+        Assertions.assertEquals("select * from employees where name like ?", SqlObfuscator.getDefaultSqlObfuscator().obfuscateSql(sql));
     }
 
     @Test
     public void lineBreak() {
         String sql = SqlObfuscator.getDefaultSqlObfuscator().obfuscateSql(
                 "select * from accounts where accounts.name != 'dude \n newline' order by accounts.name");
-        assertEquals("select * from accounts where accounts.name != ? order by accounts.name", sql);
+        Assertions.assertEquals("select * from accounts where accounts.name != ? order by accounts.name", sql);
     }
 
     @Test
     public void singleQuote() {
         String sql = SqlObfuscator.getDefaultSqlObfuscator().obfuscateSql("select * from employees where name = 'dude'");
-        assertEquals("select * from employees where name = ?", sql);
+        Assertions.assertEquals("select * from employees where name = ?", sql);
     }
 
     @Test
     public void doubleQuote() {
         String sql = SqlObfuscator.getDefaultSqlObfuscator().obfuscateSql(
                 "select * from employees where name = \"dude\" and comment = 'whoah dude'");
-        assertEquals("select * from employees where name = ? and comment = ?", sql);
+        Assertions.assertEquals("select * from employees where name = ? and comment = ?", sql);
     }
 
     @Test
     public void testDollarQuotes() {
         SqlObfuscator obfuscator = SqlObfuscator.getDefaultSqlObfuscator();
         String result = obfuscator.obfuscateSql("select * from a where x = $$I'm a thing$$ and b = $FOO$;");
-        assertEquals("select * from a where x = ? and b = ?", result);
+        Assertions.assertEquals("select * from a where x = ? and b = ?", result);
     }
     
     @Test
@@ -106,7 +118,7 @@ public class SqlObfuscatorTest {
                 "and aa = q'(meh)' and bb = q'<okey>'");
 
         String expected = "select * from a where x = ? and y = ? and z = ? and aa = ? and bb = ?";
-        assertEquals(expected, result);
+        Assertions.assertEquals(expected, result);
     }
     
     @Test
@@ -280,7 +292,7 @@ public class SqlObfuscatorTest {
 
     @Test
     public void noSql() {
-        Assert.assertNull(SqlObfuscator.getNoSqlObfuscator().obfuscateSql("select test from dude where id = 3"));
+        Assertions.assertNull(SqlObfuscator.getNoSqlObfuscator().obfuscateSql("select test from dude where id = 3"));
     }
 
     @Test
@@ -294,8 +306,8 @@ public class SqlObfuscatorTest {
         String expectedSql = "replace into table1 (col1, col2, col3, col4, col5) values (?, ?, ?, CURRENT_TIMESTAMP, int)";
 
         String actualSql = sqlObfuscator.obfuscateSql(rawSql);
-        Assert.assertNotNull(actualSql);
-        Assert.assertEquals("Large amount of HTML should be replaced with '?' in 'values' clause", expectedSql,
+        Assertions.assertNotNull(actualSql);
+        Assertions.assertEquals("Large amount of HTML should be replaced with '?' in 'values' clause", expectedSql,
                 actualSql);
     }
 }
