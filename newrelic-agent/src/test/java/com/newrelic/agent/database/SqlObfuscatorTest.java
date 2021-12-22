@@ -31,9 +31,9 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 public class SqlObfuscatorTest {
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/sql.csv", delimiter = '|', numLinesToSkip = 2)
-    public void testObfuscation(String dialect, String sql, String expectedResult) {
-        String result = dialect.isEmpty() ?
+    @CsvFileSource(resources = "/com/newrelic/agent/database/SqlObfuscatorTest.txt", delimiter = '|', numLinesToSkip = 2)
+    public void testObfuscation(String details, String dialect, String sql, String expectedResult) {
+        String result = "none".equals(dialect) ?
                 SqlObfuscator.getDefaultSqlObfuscator().obfuscateSql(sql) :
                 SqlObfuscator.getDefaultSqlObfuscator().obfuscateSql(sql, dialect);
         Assertions.assertEquals(expectedResult, result);
@@ -56,7 +56,7 @@ public class SqlObfuscatorTest {
 
     @Test
     public void nullSql() {
-        Assertions.assertEquals(null, SqlObfuscator.getDefaultSqlObfuscator().obfuscateSql(null));
+        Assertions.assertNull(SqlObfuscator.getDefaultSqlObfuscator().obfuscateSql(null));
     }
 
     @Test
@@ -307,7 +307,7 @@ public class SqlObfuscatorTest {
 
         String actualSql = sqlObfuscator.obfuscateSql(rawSql);
         Assertions.assertNotNull(actualSql);
-        Assertions.assertEquals("Large amount of HTML should be replaced with '?' in 'values' clause", expectedSql,
-                actualSql);
+        Assertions.assertEquals(expectedSql, actualSql,
+                "Large amount of HTML should be replaced with '?' in 'values' clause");
     }
 }

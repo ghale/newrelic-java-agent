@@ -1,0 +1,6 @@
+Details     |   Dialect     |   SQL                                 |   Expected Result
+------------|----------------------------------------------------------------------------------------
+Simple      |   none        | select * from table where id = '0'    |   select * from table where id = ?
+Simple      |   mysql       | select * from table where id = '0'    |   select * from table where id = ?
+Simple      |   oracle      | select * from table where id = '0'    |   select * from table where id = ?
+Simple      |   postgres    | select * from table where id = '0'    |   select * from table where id = ?

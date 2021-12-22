@@ -1,3 +1,0 @@
-Dialect |   SQL                                 |   Expected Result
--------------------------------------------------------------------
-mysql   | select * from table where id = '0'    |   select * from table where id = ?
