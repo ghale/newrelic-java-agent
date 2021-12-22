@@ -38,7 +38,8 @@ public class SqlObfuscatorTest {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        assertEquals("update content set content=? where id=?", SqlObfuscator.getDefaultSqlObfuscator().obfuscateSql(sql, "mysql"));
+        assertEquals("As a last resort, SQL should be obfuscated to a '?' to avoid leaky PII", "?",
+                SqlObfuscator.getDefaultSqlObfuscator().obfuscateSql(sql));
     }
 
     @Test
@@ -289,9 +290,12 @@ public class SqlObfuscatorTest {
         URL htmlFileUrl = this.getClass().getResource("/html_ipsum.html");
         File htmlFile = new File(htmlFileUrl.getFile());
         CharSource largeHtmlText = Files.asCharSource(htmlFile, Charsets.UTF_8);
-        String rawSql = "Replace into table1 (col1, col2, col3, col4, col5) values ('string', 'string', '" + largeHtmlText +  "', CURRENT_TIMESTAMP, int)";
+        String rawSql = "replace into table1 (col1, col2, col3, col4, col5) values ('string', 'string', '" + largeHtmlText +  "', CURRENT_TIMESTAMP, int)";
+        String expectedSql = "replace into table1 (col1, col2, col3, col4, col5) values (?, ?, ?, CURRENT_TIMESTAMP, int)";
 
         String actualSql = sqlObfuscator.obfuscateSql(rawSql);
         Assert.assertNotNull(actualSql);
+        Assert.assertEquals("Large amount of HTML should be replaced with '?' in 'values' clause", expectedSql,
+                actualSql);
     }
 }

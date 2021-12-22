@@ -113,8 +113,10 @@ public abstract class SqlObfuscator {
             Agent.LOG.log(Level.INFO, "dialect=" + dialect);
             if (dialect.equals("mysql")) {
                 String obfuscatedSql = MYSQL_DIALECT_PATTERN.replacer("?").replace(sql);
+                System.out.println("***OBSQL***[" + obfuscatedSql + "]");
                 Agent.LOG.log(Level.INFO, "***OBSQL***[" + obfuscatedSql + "]");
                 obfuscatedSql = checkForUnmatchedPairs(MYSQL_UNMATCHED_PATTERN, obfuscatedSql);
+                System.out.println("***OB2SQL***[" + obfuscatedSql + "]");
                 Agent.LOG.log(Level.INFO, "***OB2SQL***[" + obfuscatedSql + "]");
                 return obfuscatedSql;
             } else if (dialect.equals("postgresql") || dialect.equals("postgres")) {
